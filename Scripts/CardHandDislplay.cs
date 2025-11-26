@@ -61,17 +61,27 @@ public class CardHandDisplay : MonoBehaviour
             }
 
             // 3) BUTONU TIKLANABİLİR YAP (insan oyuncu için)
+            // SADECE ana oyuncu için tıklanabilir olsun
             Button btn = cardObj.GetComponent<Button>();
             if (btn != null && !pc.isBot)
             {
-                string cardCopy = card;
+                string cardCopy = card;         // closure için local kopya
                 GameObject cardObjCopy = cardObj;
 
-                btn.onClick.AddListener(() =>
+                // BULLET kartı tıklanamaz olsun
+                if (cardCopy == CardDeck.BulletCardKey)   // yani "bullet"
                 {
-                    RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
-                });
+                    btn.interactable = false;
+                }
+                else
+                {
+                    btn.onClick.AddListener(() =>
+                    {
+                        RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
+                    });
+                }
             }
+
         }
 
         // En sona Draw & Pass butonunu ekliyorsan, onu aynen bırakabilirsin;

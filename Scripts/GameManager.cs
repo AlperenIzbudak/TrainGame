@@ -178,10 +178,9 @@ public class GameManager : MonoBehaviour
                 pc.SetPlayerName("Bot " + i);
             }
 
-            // Başlangıç gold (PlayerController.Start’ta da 1 set ediliyor ama net olsun)
-            if (pc.goldBars <= 0)
-                pc.goldBars = 1;
-
+            // Başlangıç altınlarını ver (2 bar, her biri random kredi)
+            GiveStartingGold(pc);
+            
             // Deste
             deck.GenerateRandomDeck(6);
             Debug.Log($"{pc.playerName} deck: {string.Join(", ", deck.playerDeck)}");
@@ -197,6 +196,21 @@ public class GameManager : MonoBehaviour
 
         // Scoreboard Setup, Start’ta yapıyoruz
     }
+    
+    private void GiveStartingGold(PlayerController pc)
+    {
+        // Herkese 2 bar
+        for (int i = 0; i < 2; i++)
+        {
+            int value = GetRandomGoldValue();
+            pc.goldBars += 1;     // bar sayısı
+            pc.AddGold(value);    // kredi
+        }
+
+        Debug.Log($"[GameManager] {pc.playerName} starting with {pc.goldBars} bars " +
+                  $"and {pc.credits} credits.");
+    }
+
 
     public WagonInfo GetWagon(int trainIndex)
     {
@@ -209,7 +223,6 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-    // Collect kartı burayı çağırıyor
     public bool TryCollectGold(PlayerController pc)
     {
         if (pc == null)
@@ -225,6 +238,7 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
+        // Önce gerçekten bar var mı?
         if (!pc.isOnRoof)
         {
             // İçerde
@@ -243,9 +257,15 @@ public class GameManager : MonoBehaviour
         }
 
         wagon.UpdateGoldText();
-        pc.AddGold(1);
 
-        Debug.Log($"[GameManager] {pc.playerName} collected 1 gold. Now has {pc.goldBars}.");
+        // Bu barın kredi değeri
+        int credit = GetRandomGoldValue();
+
+        pc.goldBars += 1;    // bar sayısı artar
+        pc.AddGold(credit);  // kredi artar
+
+        Debug.Log($"[GameManager] {pc.playerName} collected 1 gold bar worth {credit} credits. " +
+                  $"Now has {pc.goldBars} bars and {pc.credits} credits.");
 
         if (ScoreboardManager.Instance != null)
             ScoreboardManager.Instance.RefreshScoreboard();
@@ -253,7 +273,8 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    // Punch kartında vurulan oyuncu gold düşürürken burayı kullanıyoruz
+
+
     public bool TryDropGoldToWagon(PlayerController pc)
     {
         if (pc == null)
@@ -272,10 +293,17 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        // Oyuncudan 1 gold eksilt
-        pc.AddGold(-1);
+        // 1 bar kaybediyor
+        pc.goldBars = Mathf.Max(0, pc.goldBars - 1);
 
-        // Dökülen gold içerde mi, çatıda mı?
+        // Bu düşen bar için rastgele kredi kaybı (elden fazla krediyi düşmeyelim)
+        int dropCredit = GetRandomGoldValue();
+        if (dropCredit > pc.credits)
+            dropCredit = pc.credits;
+
+        pc.AddGold(-dropCredit);
+
+        // Vagona 1 bar eklenir
         if (!pc.isOnRoof)
             wagon.wagonGold++;
         else
@@ -283,11 +311,27 @@ public class GameManager : MonoBehaviour
 
         wagon.UpdateGoldText();
 
-        Debug.Log($"[GameManager] {pc.playerName} dropped 1 gold to {(pc.isOnRoof ? "roof" : "wagon")} of train {wagon.wagonIndex}.");
+        Debug.Log($"[GameManager] {pc.playerName} dropped 1 gold bar worth {dropCredit} credits " +
+                  $"to {(pc.isOnRoof ? "roof" : "wagon")} of train {wagon.wagonIndex}. " +
+                  $"Now has {pc.goldBars} bars and {pc.credits} credits.");
 
         if (ScoreboardManager.Instance != null)
             ScoreboardManager.Instance.RefreshScoreboard();
 
         return true;
     }
+
+
+    
+    // Her altın barı için rastgele kredi değeri üret
+    private int GetRandomGoldValue()
+    {
+        // Basit örnek: 200, 250, 300'den biri
+        int[] possibleValues = { 200, 250, 300 };
+        int idx = Random.Range(0, possibleValues.Length);
+        return possibleValues[idx];
+    }
+    
+    
+
 }

@@ -73,8 +73,7 @@ public class CardActionResolver : MonoBehaviour
                 break;
 
             case "fire":
-                // Fire'ı sonra detaylı yazacağız
-                FinishNow();
+                HandleFire(card);
                 break;
 
             case "drawAndPass":
@@ -438,19 +437,34 @@ private void HandleFire(PlannedCard card)
         return;
     }
 
-    // Aynı vagon + aynı katmanda (roof / iç) hedefleri bul (Punch ile aynı)
+    // FIRE: İçerdeyken eski kural, çatıda iken tüm çatıyı görebiliyor
     List<PlayerController> targets = new List<PlayerController>();
+
+    bool attackerOnRoof = attacker.isOnRoof;
+
     foreach (var p in RoundManager.Instance.players)
     {
         if (p == attacker) continue;
         if (p.playerName == attacker.playerName) continue;
 
-        if (p.trainIndex == attacker.trainIndex &&
-            p.isOnRoof == attacker.isOnRoof)
+        if (attackerOnRoof)
         {
-            targets.Add(p);
+            // Çatıdaysa → hangi vagon olursa olsun, çatıda olan herkesi vurabilir
+            if (p.isOnRoof)
+            {
+                targets.Add(p);
+            }
+        }
+        else
+        {
+            // İçerideyse → eski kural: aynı vagon + iç kısım
+            if (p.trainIndex == attacker.trainIndex && !p.isOnRoof)
+            {
+                targets.Add(p);
+            }
         }
     }
+
 
     if (punchPanel == null || punchButtonsParent == null || punchButtonPrefab == null || punchMessageText == null)
     {

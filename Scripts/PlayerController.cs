@@ -18,11 +18,13 @@ public class PlayerController : MonoBehaviour
     public bool isOnRoof = false;
     
     [Header("Bullets")]
-    public int maxBulletCount = 6;   // Toplam kaç tane bullet'ı var
-    public int bulletsUsed = 0;      // Kaç tanesini ateşledi (hedefe verdi)
+    public int maxBulletCount = 6;   // Toplam mermi sayısı
+    public int bulletsUsed = 0;
 
     [Header("Gold")]
-    public int goldBars = 0;
+    public int goldBars = 0;   // sahip olduğu bar sayısı
+    public int credits = 0;    // toplam kredi değeri
+
 
     [Header("UI (optional)")]
     public TMP_Text debugLabel; // İstersen canvas üstüne koy, boş bırakabilirsin
@@ -31,13 +33,17 @@ public class PlayerController : MonoBehaviour
     public TMP_Text nameLabel;
     private void Start()
     {
-        if (goldBars <= 0)
-            goldBars = 1;
+        // Negatif olmasın, asıl başlangıç değerlerini GameManager verecek
+        if (goldBars < 0) goldBars = 0;
+        if (credits < 0) credits = 0;
 
         UpdateDebugLabel();
 
-        Debug.Log($"{(isBot ? "BOT" : "PLAYER")} {playerName} spawned. " + $"Status: {(isBot ? "Bot" : "NotBot")} (train={trainIndex}, spot={spotIndex}, roof={isOnRoof})");
+        Debug.Log($"{(isBot ? "BOT" : "PLAYER")} {playerName} spawned. " +
+                  $"Status: {(isBot ? "Bot" : "NotBot")} (train={trainIndex}, spot={spotIndex}, roof={isOnRoof})");
     }
+
+
 
     public void SetPlayerName(string name)
     {
@@ -45,20 +51,21 @@ public class PlayerController : MonoBehaviour
         UpdateDebugLabel();
     }
 
-    public void AddGold(int delta)
+    public void AddGold(int deltaCredits)
     {
-        goldBars += delta;
-        if (goldBars < 0) goldBars = 0;
+        credits += deltaCredits;
+        if (credits < 0) credits = 0;
 
         UpdateDebugLabel();
     }
+
     
     private void UpdateDebugLabel()
     {
         if (debugLabel != null)
         {
-            debugLabel.text = $"{playerName}\nT{trainIndex} S{spotIndex}\n" +
-                              (isOnRoof ? "Roof" : "Inside") + $"\nGold: {goldBars}";
+            debugLabel.text = playerName;
         }
     }
+
 }

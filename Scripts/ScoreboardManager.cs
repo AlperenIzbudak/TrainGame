@@ -98,9 +98,10 @@ public class ScoreboardManager : MonoBehaviour
     public void RefreshScoreboard()
     {
         if (_rows.Count == 0) return;
+        
+        // Krediye göre azalan sırada sort et (ama ekrana bar sayısını yazacağız)
+        _rows.Sort((a, b) => b.player.credits.CompareTo(a.player.credits));
 
-        // Gold'a göre azalan sırada sort et
-        _rows.Sort((a, b) => b.player.goldBars.CompareTo(a.player.goldBars));
 
         // UI sırasını ve textleri güncelle
         for (int i = 0; i < _rows.Count; i++)
@@ -114,7 +115,22 @@ public class ScoreboardManager : MonoBehaviour
                 row.nameText.text = row.player.playerName;
 
             if (row.goldText != null)
-                row.goldText.text = row.player.goldBars.ToString();
+            {
+                int bars = row.player.goldBars;
+
+                // Sadece gerçek oyuncu (isBot == false) kendi kredisini görsün
+                if (!row.player.isBot)
+                {
+                    // Örnek: "2 (700)"
+                    row.goldText.text = $"{bars} ({row.player.credits})";
+                }
+                else
+                {
+                    // Botlar için sadece bar sayısı
+                    row.goldText.text = bars.ToString();
+                }
+            }
+
         }
     }
 }
