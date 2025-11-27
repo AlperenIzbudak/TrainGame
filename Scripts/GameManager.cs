@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class WagonInfo
@@ -13,7 +15,7 @@ public class WagonInfo
 
     public int wagonGold;     // İçerdeki altın
     public int roofGold;      // Çatıdaki altın
-
+    
     public void RandomizeGold()
     {
         // 1–3 gold içeride
@@ -52,7 +54,19 @@ public class GameManager : MonoBehaviour
     public CardSpriteDatabase cardDatabase;
 
     [Header("Wagons & Gold")]
-    public WagonInfo[] wagons;  // Inspector’da 4 eleman
+    public WagonInfo[] wagons;  // Inspector’da 4 eleman 
+    
+    [Header("Sheriff")]
+    public RectTransform sheriffUI;   // Canvas altındaki sheriff sprite'ının RectTransform'u
+    public int sheriffTrainIndex = 4; // Sheriff hangi vagonda
+    
+    [Header("Sheriff spots (inside) w15,w25,w35,w45")]
+    public RectTransform[] sheriffSpots;
+    
+    [Header("Current Card UI")]
+    public Image currentCardImage;   // Ortadaki kart resmi
+    public TMP_Text currentCardText; // Altına yazılacak metin
+    
 
     private void Awake()
     {
@@ -71,6 +85,10 @@ public class GameManager : MonoBehaviour
 
         // 2) Oyuncuları spawn et (RoundManager.Instance.RegisterPlayer(...) burada çağrılıyor)
         SpawnPlayers();
+        
+        // 2.5) Sheriff'i başlat
+        InitSheriff();
+
 
         // 3) SCOREBOARD’U KUR (satırları oluştur, paneli aç)
         if (ScoreboardManager.Instance != null && RoundManager.Instance != null)
@@ -332,6 +350,239 @@ public class GameManager : MonoBehaviour
         return possibleValues[idx];
     }
     
+    private void InitSheriff()
+    {
+        if (sheriffUI == null)
+        {
+            Debug.LogWarning("[GameManager] Sheriff UI not assigned; sheriff mechanics disabled.");
+            return;
+        }
+
+        sheriffTrainIndex = 4;  // oyun başında 4. vagon
+
+        UpdateSheriffPosition();
+    }
+
+    private void UpdateSheriffPosition()
+    {
+        if (sheriffUI == null) return;
+
+        RectTransform spot = GetSheriffSpot(sheriffTrainIndex);
+        if (spot != null)
+            sheriffUI.anchoredPosition = spot.anchoredPosition;
+        else
+            Debug.LogError("[GameManager] UpdateSheriffPosition: sheriff spot is null!");
+    }
     
+    public void MoveSheriff(int dir)
+    {
+        if (sheriffUI == null)
+        {
+            Debug.LogWarning("[GameManager] MoveSheriff called but sheriffUI is null.");
+            return;
+        }
+
+        int newTrain = Mathf.Clamp(sheriffTrainIndex + dir, 1, 4);
+        if (newTrain == sheriffTrainIndex)
+        {
+            Debug.Log("[GameManager] Sheriff cannot move further in that direction.");
+            return;
+        }
+
+        sheriffTrainIndex = newTrain;
+        UpdateSheriffPosition();
+
+        if (gameObject.activeInHierarchy)
+            StartCoroutine(CheckSheriffCollisionAllAfterDelay(0.5f));
+    }
+
+
+
+
+    private void ApplySheriffEffectInCurrentWagon()
+    {
+        if (RoundManager.Instance == null)
+            return;
+
+        foreach (var pc in RoundManager.Instance.players)
+        {
+            if (pc == null) continue;
+
+            // Aynı vagon + İÇERDE olan oyuncular
+            if (pc.trainIndex != sheriffTrainIndex) continue;
+            if (pc.isOnRoof) continue;
+
+            // 1) Oyuncunun main deck'ine 1 bullet kartı ekle
+            CardDeck deck = pc.GetComponent<CardDeck>();
+            if (deck != null)
+            {
+                deck.AddBulletCardToMainDeck();
+                Debug.Log($"[GameManager] Sheriff gave 1 bullet to {pc.playerName}.");
+            }
+
+            // 2) Oyuncuyu roof'a kov
+            pc.isOnRoof = true;
+
+            RectTransform roofSpot = GetRoofSpot(pc.trainIndex, pc.spotIndex);
+            RectTransform playerRect = pc.GetComponent<RectTransform>();
+            if (roofSpot != null && playerRect != null)
+                playerRect.anchoredPosition = roofSpot.anchoredPosition;
+        }
+    }
+
+    public int GetSheriffTrainIndex()
+    {
+        return sheriffTrainIndex;
+    }
+    
+    public RectTransform GetSheriffSpot(int trainIndex)
+    {
+        if (sheriffSpots == null || sheriffSpots.Length < 4)
+        {
+            Debug.LogError("[GameManager] Sheriff spots not configured correctly.");
+            return null;
+        }
+
+        int idx = trainIndex - 1; // 1..4 -> 0..3
+        if (idx < 0 || idx >= sheriffSpots.Length)
+        {
+            Debug.LogError("[GameManager] GetSheriffSpot: index out of range " + idx);
+            return null;
+        }
+
+        return sheriffSpots[idx];
+    }
+
+
+    // Bir oyuncu hareket ettiğinde CardActionResolver burayı çağıracak
+    public void OnPlayerPositionChanged(PlayerController pc)
+    {
+        if (pc == null) return;
+        // GameObject disable ise coroutine başlamasın
+        if (!gameObject.activeInHierarchy) return;
+
+        StartCoroutine(CheckSheriffCollisionAfterDelay(pc, 0.5f));
+    }
+
+    // Sheriff hareket ettiğinde de tüm oyuncuları kontrol edelim
+    private IEnumerator CheckSheriffCollisionAllAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (RoundManager.Instance == null) yield break;
+
+        foreach (var pc in RoundManager.Instance.players)
+        {
+            if (pc == null) continue;
+            TryApplySheriffEffectToPlayer(pc);
+        }
+    }
+
+
+    // Belirli bir oyuncu için sheriff çarpışmasını kontrol eden coroutine
+    private IEnumerator CheckSheriffCollisionAfterDelay(PlayerController pc, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (pc == null) yield break;
+
+        TryApplySheriffEffectToPlayer(pc);
+    }
+
+
+    // Asıl iş burada: aynı vagondaysa bullet ver + roof'a gönder
+    private void TryApplySheriffEffectToPlayer(PlayerController pc)
+    {
+        // Sheriff UI yoksa ya da sheriff sistemi kapalıysa bir şey yapma
+        if (sheriffUI == null) return;
+
+        // Sheriff daima içerde; oyuncu da içerdeyse ve aynı vagondaysa etkilenir
+        if (pc.isOnRoof) return;
+        if (pc.trainIndex != sheriffTrainIndex) return;
+
+        // 1) Oyuncunun main deck'ine 1 bullet kartı ekle
+        CardDeck deck = pc.GetComponent<CardDeck>();
+        if (deck != null)
+        {
+            deck.AddBulletCardToMainDeck();
+            Debug.Log($"[GameManager] Sheriff gave 1 bullet to {pc.playerName}.");
+        }
+
+        // 2) Oyuncuyu roof'a kov
+        pc.isOnRoof = true;
+
+        RectTransform roofSpot = GetRoofSpot(pc.trainIndex, pc.spotIndex);
+        RectTransform playerRect = pc.GetComponent<RectTransform>();
+        if (roofSpot != null && playerRect != null)
+            playerRect.anchoredPosition = roofSpot.anchoredPosition;
+
+        Debug.Log($"[GameManager] {pc.playerName} was sent to the roof by the Sheriff in wagon {pc.trainIndex}.");
+    }
+
+    public void ClearCurrentCardUI()
+    {
+        if (currentCardImage != null)
+        {
+            currentCardImage.enabled = false;
+            currentCardImage.sprite = null;
+        }
+
+        if (currentCardText != null)
+        {
+            currentCardText.text = "";
+        }
+    }
+
+    public void ShowCurrentCard(string cardKey, string ownerName, string phaseLabel)
+    {
+        if (string.IsNullOrEmpty(cardKey))
+        {
+            ClearCurrentCardUI();
+            return;
+        }
+
+        // 1) Sprite ayarla
+        if (currentCardImage != null && cardDatabase != null)
+        {
+            var sprite = cardDatabase.GetSprite(cardKey);
+            if (sprite != null)
+            {
+                currentCardImage.sprite = sprite;
+                currentCardImage.enabled = true;
+            }
+            else
+            {
+                // sprite yoksa yine de image'i kapatabiliriz
+                currentCardImage.enabled = false;
+            }
+        }
+
+        // 2) Yazı ayarla
+        if (currentCardText != null)
+        {
+            string pretty = GetPrettyCardName(cardKey);
+
+            if (!string.IsNullOrEmpty(ownerName))
+                currentCardText.text = $"{ownerName}: {pretty}";
+            else
+                currentCardText.text = pretty;
+        }
+    }
+
+    private string GetPrettyCardName(string key)
+    {
+        switch (key)
+        {
+            case "punch": return "Punch";
+            case "fire": return "Fire";
+            case "moveHorizontally": return "Move Horiz.";
+            case "moveVertically": return "Move Vert.";
+            case "collect": return "Collect";
+            case "moveSherrif": return "Move Sheriff";
+            case "drawAndPass": return "Draw & Pass";
+            case "bullet": return "Bullet";
+            default: return key;
+        }
+    }
+
 
 }

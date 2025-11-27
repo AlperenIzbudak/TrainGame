@@ -16,6 +16,7 @@ public class CardHandDisplay : MonoBehaviour
         cardDatabase = db;
         deck = d;
     }
+
     public void DisplayCards()
     {
         if (handPanel == null || cardButtonPrefab == null || deck == null)
@@ -30,7 +31,6 @@ public class CardHandDisplay : MonoBehaviour
 
         PlayerController pc = deck.GetComponent<PlayerController>();
 
-        // ELDEN KART BUTONLARINI ÇİZ
         foreach (string card in deck.playerDeck)
         {
             GameObject cardObj = Instantiate(cardButtonPrefab, handPanel);
@@ -39,60 +39,52 @@ public class CardHandDisplay : MonoBehaviour
             if (cardDatabase != null)
             {
                 Sprite s = cardDatabase.GetSprite(card);
-                Image img = cardObj.GetComponent<Image>();          // Button'ın Image'ı
-                if (img != null && s != null)
+
+                // PREFAB HİYERARŞİSİNE GÖRE DOĞRUDAN "CardImage" ÇOCUĞUNU BUL
+                Transform imgTr = cardObj.transform.Find("CardImage");
+                if (imgTr != null)
                 {
-                    img.sprite = s;
-                    img.preserveAspect = true;                       // İstersen
+                    Image img = imgTr.GetComponent<Image>();
+                    if (img != null && s != null)
+                    {
+                        img.sprite = s;
+                        img.preserveAspect = true;
+                    }
+                    else
+                    {
+                        if (img == null)
+                            Debug.LogWarning("[CardHandDisplay] CardImage üzerinde Image component yok.");
+                        if (s == null)
+                            Debug.LogWarning("[CardHandDisplay] Sprite bulunamadı: " + card);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[CardHandDisplay] CardPrefab içinde 'CardImage' child'ını bulamadım.");
                 }
             }
 
             // 2) İSİM YAZ
             string displayName = GetPrettyName(card);
-
             TMP_Text tmp = cardObj.GetComponentInChildren<TMP_Text>();
             if (tmp != null)
                 tmp.text = displayName;
-            else
-            {
-                Text uText = cardObj.GetComponentInChildren<Text>();
-                if (uText != null)
-                    uText.text = displayName;
-            }
 
-            // 3) BUTONU TIKLANABİLİR YAP (insan oyuncu için)
-            // SADECE ana oyuncu için tıklanabilir olsun
-            Button btn = cardObj.GetComponent<Button>();
+            // 3) BUTON TIKLAMA
+            Button btn = cardObj.GetComponentInChildren<Button>();
             if (btn != null && !pc.isBot)
             {
-                string cardCopy = card;         // closure için local kopya
+                string cardCopy = card;
                 GameObject cardObjCopy = cardObj;
 
-                // BULLET kartı tıklanamaz olsun
-                if (cardCopy == CardDeck.BulletCardKey)   // yani "bullet"
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() =>
                 {
-                    btn.interactable = false;
-                }
-                else
-                {
-                    btn.onClick.AddListener(() =>
-                    {
-                        RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
-                    });
-                }
+                    RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
+                });
             }
-
         }
-
-        // En sona Draw & Pass butonunu ekliyorsan, onu aynen bırakabilirsin;
-        // istersen ona ayrı bir sprite veya sadece düz arka plan kullan.
     }
-
-
-
-
-    
-    
 
     string GetPrettyName(string key)
     {

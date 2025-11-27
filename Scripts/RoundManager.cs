@@ -7,7 +7,8 @@ public class RoundManager : MonoBehaviour
     public static RoundManager Instance { get; private set; }
 
     public int cardsPerRound = 4;              // Her oyuncu kaç kart atacak
-    public float playDelay = 0.5f;             // Kartlar arasındaki bekleme süresi
+    public float playDelay = 0.5f;
+    public float botPlanningDelay = 0.5f;      // Kartlar arasındaki bekleme süresi
 
     public List<PlayerController> players = new List<PlayerController>();
 
@@ -45,6 +46,9 @@ public class RoundManager : MonoBehaviour
         currentTurn = 0;
         currentPlayerIndex = 0;
         planningPhaseActive = true;
+        
+        if (GameManager.Instance != null)
+            GameManager.Instance.ClearCurrentCardUI();
 
         Debug.Log("[RoundManager] Planning phase started");
         PromptNextPlayer();
@@ -70,13 +74,14 @@ public class RoundManager : MonoBehaviour
 
         if (pc.isBot)
         {
-            PlayBotCard(pc);
+            StartCoroutine(BotPlayAfterDelay(pc));
         }
         else
         {
             Debug.Log("[RoundManager] Waiting for PLAYER to click a card...");
             // Player kartı tıklayınca CardHandDisplay -> OnHumanCardSelected çağrılacak
         }
+
     }
 
     void PlayBotCard(PlayerController pc)
@@ -90,15 +95,19 @@ public class RoundManager : MonoBehaviour
             return;
         }
 
-        // Şimdilik: bot desteden ilk kartı atıyor
         string cardName = deck.playerDeck[0];
         deck.playerDeck.RemoveAt(0);
 
         plannedCards.Add(new PlannedCard(pc, cardName));
         Debug.Log($"[RoundManager] BOT {pc.playerName} played {cardName}");
 
+        // EKRANDA GÖSTER (Planning Phase)
+        if (GameManager.Instance != null)
+            GameManager.Instance.ShowCurrentCard(cardName, pc.playerName, "Planning");
+
         AdvanceTurn();
     }
+
     
     void AdvanceTurn()
     {
@@ -165,6 +174,9 @@ public class RoundManager : MonoBehaviour
         plannedCards.Add(new PlannedCard(pc, "drawAndPass"));
         Debug.Log($"[RoundManager] PLAYER {pc.playerName} used Draw & Pass (pass this slot).");
 
+        if (GameManager.Instance != null)
+            GameManager.Instance.ShowCurrentCard("drawAndPass", pc.playerName, "Planning");
+        
         // 4) Sıradaki oyuncuya geç
         AdvanceTurn();
     }
@@ -194,26 +206,31 @@ public class RoundManager : MonoBehaviour
             PlannedCard card = plannedCards[i];
             Debug.Log($"[RoundManager] Resolving card #{i + 1}: {card.owner.playerName} -> {card.cardName}");
 
+            // PLAY PHASE İÇİN EKRANDA GÖSTER
+            if (GameManager.Instance != null)
+                GameManager.Instance.ShowCurrentCard(card.cardName, card.owner.playerName, "Play");
+
             bool resolved = false;
 
-            // Kart efektini çalıştır, bittiğinde resolved = true diyelim
             CardActionResolver.Instance.ResolveCard(card, () =>
             {
                 resolved = true;
             });
 
-            // Kart gerçekten bitene kadar bekle (örn. oyuncu yön seçsin vs.)
             while (!resolved)
                 yield return null;
 
-            // Kartlar arasında ekstra gecikme
             yield return new WaitForSeconds(playDelay);
         }
 
+        // Round bitti → kart gösterimini temizle
+        if (GameManager.Instance != null)
+            GameManager.Instance.ClearCurrentCardUI();
+
         Debug.Log("[RoundManager] All cards resolved. Round finished!");
         playRoutine = null;
-        // İstersen burada yeni round başlatabilirsin.
     }
+
     
     // Player elindeki kart butonuna tıkladığında çağrılacak
     public void OnHumanCardSelected(CardDeck deck, GameObject cardButton, string cardName)
@@ -227,6 +244,15 @@ public class RoundManager : MonoBehaviour
         if (pc == null)
         {
             Debug.LogError("[RoundManager] OnHumanCardSelected: PlayerController not found on CardDeck");
+            return;
+        }
+
+        // >>> YENİ: gerçekten sırası bu oyuncuda mı? <<<
+        PlayerController current = GetCurrentPlanningPlayer();
+        if (current == null || current != pc || pc.isBot)
+        {
+            // Bot sırasındayken veya başka oyuncunun sırasındayken gelen tıklamayı yok say
+            Debug.LogWarning($"[RoundManager] Ignoring card click from {pc.playerName} – not their turn.");
             return;
         }
 
@@ -245,6 +271,9 @@ public class RoundManager : MonoBehaviour
         plannedCards.Add(new PlannedCard(pc, cardName));
         Debug.Log($"[RoundManager] PLAYER {pc.playerName} played {cardName}");
 
+        if (GameManager.Instance != null)
+            GameManager.Instance.ShowCurrentCard(cardName, pc.playerName, "Planning");
+
         // 4) Oyuncunun elini yeniden çiz (kart sayısı azaldı)
         CardHandDisplay display = pc.GetComponent<CardHandDisplay>();
         if (display != null)
@@ -252,6 +281,20 @@ public class RoundManager : MonoBehaviour
 
         // 5) Sıradaki oyuncuya geç
         AdvanceTurn();
+    }
+
+    
+    private IEnumerator BotPlayAfterDelay(PlayerController pc)
+    {
+        yield return new WaitForSeconds(botPlanningDelay);
+        PlayBotCard(pc);
+    }
+    
+    private PlayerController GetCurrentPlanningPlayer()
+    {
+        if (!planningPhaseActive) return null;
+        if (currentPlayerIndex < 0 || currentPlayerIndex >= players.Count) return null;
+        return players[currentPlayerIndex];
     }
 
     

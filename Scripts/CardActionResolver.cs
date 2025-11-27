@@ -81,8 +81,7 @@ public class CardActionResolver : MonoBehaviour
                 break;
 
             case "moveSherrif":
-                // Şimdilik hiçbir şey yapmayan kart
-                FinishNow();
+                HandleMoveSherrif(card);
                 break;
 
             default:
@@ -175,8 +174,9 @@ public class CardActionResolver : MonoBehaviour
         RectTransform playerRect = pc.GetComponent<RectTransform>();
         if (playerRect != null)
             playerRect.anchoredPosition = targetSpot.anchoredPosition;
-
         Debug.Log($"[CardActionResolver] {pc.playerName} moved horizontally to train {pc.trainIndex}, spot {pc.spotIndex}, roof={pc.isOnRoof}");
+        
+        GameManager.Instance.OnPlayerPositionChanged(pc);
     }
 
     // ==================== COLLECT ====================
@@ -421,6 +421,9 @@ public class CardActionResolver : MonoBehaviour
             playerRect.anchoredPosition = targetSpot.anchoredPosition;
 
         Debug.Log($"[CardActionResolver] {pc.playerName} moved vertically. roof={pc.isOnRoof}");
+        
+        GameManager.Instance.OnPlayerPositionChanged(pc);
+        
     }
     
     // ==================== FIRE ====================
@@ -571,6 +574,68 @@ private void ResolveFireOnTarget(PlayerController attacker, PlayerController tar
                   $"Attacker bulletsUsed={attacker.bulletsUsed}/{attacker.maxBulletCount}");
     }
 }
+
+// ==================== MOVE SHERRIF ====================
+
+private void HandleMoveSherrif(PlannedCard card)
+{
+    PlayerController pc = card.owner;
+
+    // Sheriff'in şu an hangi vagonda olduğunu GameManager'dan al
+    int train = GameManager.Instance.GetSheriffTrainIndex();
+
+    bool canLeft  = train > 1;
+    bool canRight = train < 4;
+
+    // BOT → rastgele yön (mümkünse)
+    if (pc.isBot)
+    {
+        int dir = DecideBotHorizontalDirection(canLeft, canRight);
+        GameManager.Instance.MoveSheriff(dir);
+        FinishNow();
+        return;
+    }
+
+    // PLAYER → MoveHorizontally ile aynı UI'yi kullan
+    if (horizontalChoicePanel == null || leftButton == null || rightButton == null)
+    {
+        Debug.LogError("[CardActionResolver] MoveSherrif: Horizontal choice UI not assigned!");
+        // UI yoksa fallback: mantıklı bir yön seçelim
+        int dir = DecideBotHorizontalDirection(canLeft, canRight);
+        GameManager.Instance.MoveSheriff(dir);
+        FinishNow();
+        return;
+    }
+
+    horizontalChoicePanel.SetActive(true);
+
+    leftButton.onClick.RemoveAllListeners();
+    rightButton.onClick.RemoveAllListeners();
+
+    leftButton.gameObject.SetActive(canLeft);
+    rightButton.gameObject.SetActive(canRight);
+
+    if (canLeft)
+    {
+        leftButton.onClick.AddListener(() =>
+        {
+            GameManager.Instance.MoveSheriff(-1);
+            horizontalChoicePanel.SetActive(false);
+            FinishNow();
+        });
+    }
+
+    if (canRight)
+    {
+        rightButton.onClick.AddListener(() =>
+        {
+            GameManager.Instance.MoveSheriff(+1);
+            horizontalChoicePanel.SetActive(false);
+            FinishNow();
+        });
+    }
+}
+
 
 
     
