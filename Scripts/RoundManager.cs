@@ -6,17 +6,20 @@ public class RoundManager : MonoBehaviour
 {
     public static RoundManager Instance { get; private set; }
 
-    public int cardsPerRound = 4;              // Her oyuncu kaç kart atacak
+    public int cardsPerRound = 4;              
     public float playDelay = 0.5f;
-    public float botPlanningDelay = 0.5f;      // Kartlar arasındaki bekleme süresi
+    public float botPlanningDelay = 0.5f;  
+    
+    public int currentRound = 1;   // 1..maxRounds
+    public int maxRounds = 4;      // Oyundaki toplam round sayısı
+
 
     public List<PlayerController> players = new List<PlayerController>();
-
-    // Bu roundda atılan TÜM kartlar (sırası bozulmayacak)
+    
     public List<PlannedCard> plannedCards = new List<PlannedCard>();
 
-    int currentTurn = 0;        // 0..cardsPerRound-1
-    int currentPlayerIndex = 0; // 0..players.Count-1
+    int currentTurn = 0;   
+    int currentPlayerIndex = 0; 
     bool planningPhaseActive = false;
 
     Coroutine playRoutine;
@@ -31,8 +34,6 @@ public class RoundManager : MonoBehaviour
         Instance = this;
     }
     
-    
-
     // GameManager her spawn ettiği oyuncuyu buraya kaydedecek
     public void RegisterPlayer(PlayerController pc)
     {
@@ -76,12 +77,6 @@ public class RoundManager : MonoBehaviour
         {
             StartCoroutine(BotPlayAfterDelay(pc));
         }
-        else
-        {
-            Debug.Log("[RoundManager] Waiting for PLAYER to click a card...");
-            // Player kartı tıklayınca CardHandDisplay -> OnHumanCardSelected çağrılacak
-        }
-
     }
 
     void PlayBotCard(PlayerController pc)
@@ -222,13 +217,17 @@ public class RoundManager : MonoBehaviour
 
             yield return new WaitForSeconds(playDelay);
         }
-
-        // Round bitti → kart gösterimini temizle
+        // Round bitti, ortadaki kartı temizle
         if (GameManager.Instance != null)
             GameManager.Instance.ClearCurrentCardUI();
 
         Debug.Log("[RoundManager] All cards resolved. Round finished!");
         playRoutine = null;
+
+        // >>> YENİ: round sayacını ilerlet ve gerekiyorsa yeni round başlat
+        OnRoundFinished();
+
+        
     }
 
     
@@ -296,7 +295,29 @@ public class RoundManager : MonoBehaviour
         if (currentPlayerIndex < 0 || currentPlayerIndex >= players.Count) return null;
         return players[currentPlayerIndex];
     }
+    
+    private void OnRoundFinished()
+    {
+        Debug.Log($"[RoundManager] Round {currentRound} finished.");
 
-    
-    
+        currentRound++;
+
+        if (currentRound <= maxRounds)
+        {
+            // Yeni round için hazırlık
+            if (GameManager.Instance != null)
+                GameManager.Instance.PrepareNewRound();
+
+            // Yeni round'un planning phase'ini başlat
+            BeginPlanningPhase();
+        }
+        else
+        {
+            Debug.Log("[RoundManager] Game finished. Max rounds reached.");
+
+            if (GameManager.Instance != null)
+                GameManager.Instance.ShowFinalResults();
+        }
+    }
+
 }

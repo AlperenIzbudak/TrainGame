@@ -71,18 +71,32 @@ public class CardHandDisplay : MonoBehaviour
                 tmp.text = displayName;
 
             // 3) BUTON TIKLAMA
-            Button btn = cardObj.GetComponentInChildren<Button>();
-            if (btn != null && !pc.isBot)
-            {
-                string cardCopy = card;
-                GameObject cardObjCopy = cardObj;
+            // 3) BUTONU TIKLANABİLİR YAP (insan oyuncu için, BULLET hariç)
+            Button btn = cardObj.GetComponent<Button>();
+            bool isBullet = (card == CardDeck.BulletCardKey);   // "bullet"
 
-                btn.onClick.RemoveAllListeners();
-                btn.onClick.AddListener(() =>
+            if (btn != null)
+            {
+                // Bullet veya bot ise tıklanamaz
+                if (pc.isBot || isBullet)
                 {
-                    RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
-                });
+                    btn.interactable = false;
+                    // Listener eklemiyoruz
+                }
+                else
+                {
+                    btn.interactable = true;
+
+                    string cardCopy = card;
+                    GameObject cardObjCopy = cardObj;
+
+                    btn.onClick.AddListener(() =>
+                    {
+                        RoundManager.Instance.OnHumanCardSelected(deck, cardObjCopy, cardCopy);
+                    });
+                }
             }
+
         }
     }
 

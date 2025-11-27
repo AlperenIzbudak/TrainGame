@@ -539,7 +539,8 @@ private void ResolveFireOnTarget(PlayerController attacker, PlayerController tar
     }
 
     attacker.bulletsUsed++;
-
+    attacker.bulletsGiven++;
+    
     // Hedefin main deck'ine bullet kartı ekle
     targetDeck.AddBulletCardToMainDeck();
 

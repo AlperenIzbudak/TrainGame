@@ -3,6 +3,8 @@ using TMPro;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 
 [System.Serializable]
 public class WagonInfo
@@ -567,6 +569,43 @@ public class GameManager : MonoBehaviour
                 currentCardText.text = pretty;
         }
     }
+    
+    public void PrepareNewRound()
+    {
+        Debug.Log("[GameManager] Preparing new round...");
+
+        // 1) Vagonlardaki gold miktarlarını tekrar randomla (her round tren yeniden dağıtılıyor gibi)
+        InitWagonsGold();
+
+        // 2) Tüm oyuncular için yeni el dağıt
+        if (RoundManager.Instance == null) return;
+
+        foreach (var pc in RoundManager.Instance.players)
+        {
+            if (pc == null) continue;
+
+            CardDeck deck = pc.GetComponent<CardDeck>();
+            CardHandDisplay display = pc.GetComponent<CardHandDisplay>();
+
+            if (deck != null)
+            {
+                // Eski elde kalan kartları unut, main deck'inden yeni 6 kart çek
+                deck.GenerateRandomDeck(6);
+                Debug.Log($"[GameManager] New hand for {pc.playerName}: {string.Join(", ", deck.playerDeck)}");
+            }
+
+            // İnsan oyuncunun elini ekranda göster
+            if (display != null && !pc.isBot)
+            {
+                // Setup zaten spawn sırasında yapıldı; sadece yeniden çizmek yeterli
+                display.DisplayCards();
+            }
+        }
+
+        // 3) Ortadaki "current card" UI'yi sıfırla
+        ClearCurrentCardUI();
+    }
+
 
     private string GetPrettyCardName(string key)
     {
@@ -583,6 +622,42 @@ public class GameManager : MonoBehaviour
             default: return key;
         }
     }
+    
+    public void ShowFinalResults()
+    {
+        if (RoundManager.Instance == null)
+        {
+            Debug.LogError("[GameManager] ShowFinalResults: RoundManager.Instance is null");
+            return;
+        }
+
+        var list = new List<FinalPlayerData>();
+
+        foreach (var pc in RoundManager.Instance.players)
+        {
+            if (pc == null) continue;
+
+            var data = new FinalPlayerData
+            {
+                name = pc.playerName,
+                goldBars = pc.goldBars,
+                credits = pc.credits,    
+                isBot = pc.isBot,
+                bulletsGiven = pc.bulletsGiven
+            };
+
+            list.Add(data);
+        }
+
+        // Credits'e göre büyükten küçüğe sırala
+        list.Sort((a, b) => b.credits.CompareTo(a.credits));
+
+        FinalResultsData.Players = list;
+
+        Debug.Log("[GameManager] Loading WinnerScene with final results...");
+        SceneManager.LoadScene("WinnerScene");
+    }
+
 
 
 }

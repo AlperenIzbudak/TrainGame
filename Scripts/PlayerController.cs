@@ -20,7 +20,10 @@ public class PlayerController : MonoBehaviour
     [Header("Bullets")]
     public int maxBulletCount = 6;   // Toplam mermi sayısı
     public int bulletsUsed = 0;
-
+    
+    [Header("Bullet Stats")]
+    public int bulletsGiven = 0;   // başkalarına verdiği mermi kartı sayısı
+    
     [Header("Gold")]
     public int goldBars = 0;   // sahip olduğu bar sayısı
     public int credits = 0;    // toplam kredi değeri
