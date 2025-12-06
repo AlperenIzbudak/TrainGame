@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 28e7af28beec24aa5b4f5b50893b2c68
+guid: 18b9801fea51b469699efd1084f23e68
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -827577561733917504
-    second: FireCard_0
+      213: -8543239627046358130
+    second: FireCard (1)_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: FireCard_0
+      name: FireCard (1)_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1024
+        width: 160
+        height: 240
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0c414c0a79ad384f0800000000000000
-      internalID: -827577561733917504
+      spriteID: e837cdeb2d0507980800000000000000
+      internalID: -8543239627046358130
       vertices: []
       indices: 
       edges: []
@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      FireCard (1)_0: -8543239627046358130
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

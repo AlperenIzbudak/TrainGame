@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PunchSpirte_0
+      name: PunchSpirte_1
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1022
+        width: 160
+        height: 240
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 52dbf14f4791426e0800000000000000
-      internalID: -1863336355721921243
+      spriteID: 29e863607f67e4073ad7ed9ad4c5ef91
+      internalID: 1993075295
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 1b992f767028e4d4191014d380e163cd
     internalID: 0
     vertices: []
     indices: 
@@ -160,7 +160,9 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      PunchSpirte_0: -1863336355721921243
+      PunchSpirte_1: 1993075295
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
