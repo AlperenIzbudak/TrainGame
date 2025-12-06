@@ -9,7 +9,9 @@ public class FinalPlayerData
     public bool isBot;
 
     public int bulletsGiven;  // verdiği bullet sayısı
-    
+
+    // Bitiş ekranında doğru sprite'ı basmak için
+    public int characterId;   // 0..5 (PlayerController.characterId ile aynı)
 }
 
 public static class FinalResultsData

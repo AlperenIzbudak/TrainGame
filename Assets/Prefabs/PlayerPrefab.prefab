@@ -39,7 +39,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -4.8802, y: 0}
-  m_SizeDelta: {x: 60, y: 80}
+  m_SizeDelta: {x: 60, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6407089929748487370
 CanvasRenderer:
@@ -69,9 +69,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -8514013078595807785, guid: 72de8b45b10bf456b849cb2016132e16, type: 3}
+  m_Sprite: {fileID: 4460671459201177718, guid: b10e7e989afce4492971fd05e9107659, type: 3}
   m_Type: 0
-  m_PreserveAspect: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -98,7 +98,11 @@ MonoBehaviour:
   isOnRoof: 0
   maxBulletCount: 6
   bulletsUsed: 0
+  bulletsGiven: 0
   goldBars: 0
+  credits: 0
+  characterId: -1
+  characterImage: {fileID: 7270507503115567424}
   debugLabel: {fileID: 1406043926233401375}
   nameLabel: {fileID: 1406043926233401375}
 --- !u!114 &5326198711274771284
@@ -171,8 +175,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 61.4}
-  m_SizeDelta: {x: 120, y: 20}
+  m_AnchoredPosition: {x: 0, y: 70}
+  m_SizeDelta: {x: 80, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3440189708566565319
 CanvasRenderer:
@@ -231,8 +235,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 14
+  m_fontSizeBase: 14
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

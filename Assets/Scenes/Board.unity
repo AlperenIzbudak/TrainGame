@@ -289,7 +289,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 500}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 300, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &15041851
 MonoBehaviour:
@@ -759,11 +759,11 @@ RectTransform:
   - {fileID: 448984497}
   m_Father: {fileID: 1846715841}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 450, y: -71}
-  m_SizeDelta: {x: 300, y: 50}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &240815867
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1142,7 +1142,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 860, y: -180}
-  m_SizeDelta: {x: 60, y: 80}
+  m_SizeDelta: {x: 60, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &372406303
 MonoBehaviour:
@@ -1164,7 +1164,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -8514013078595807785, guid: 09ef1956964084e459358a87384af3a4, type: 3}
+  m_Sprite: {fileID: -4285594618037716695, guid: 53a5c1890ea044c2fa14ff4983b07ce8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1286,8 +1286,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 240, y: 160}
+  m_AnchoredPosition: {x: -225, y: -150}
+  m_SizeDelta: {x: 450, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &448984498
 MonoBehaviour:
@@ -1598,7 +1598,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5957354863679053931, guid: 9fec6a361a6fa43da918c99ec469f41c, type: 3}
+  m_Sprite: {fileID: -6644105240839515112, guid: 35f0363e68a784aca9e435d473ecf089, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2703,7 +2703,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 35.3}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 80, y: 20}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1059178675
 MonoBehaviour:
@@ -2725,7 +2725,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sherrif
+  m_text: 'Sheriff
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2752,8 +2754,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
-  m_fontSizeBase: 30
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2989,26 +2991,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   punchSprite: {fileID: -1863336355721921243, guid: 4de30f03e4f614f5c9a19d3db305d2af, type: 3}
-  fireSprite: {fileID: -827577561733917504, guid: 28e7af28beec24aa5b4f5b50893b2c68, type: 3}
+  fireSprite: {fileID: 3948958223006284060, guid: 18b9801fea51b469699efd1084f23e68, type: 3}
   moveHorizontallySprite: {fileID: -3280507812704846689, guid: 925de7ddf5c1f41748094bc380162cbb, type: 3}
   moveVerticallySprite: {fileID: -5055782382942282207, guid: 7f060d9b085f8480298ca40eb52ddcbf, type: 3}
-  collectSprite: {fileID: 1138429991594680347, guid: 59cc2bda7a88e40999f36ffa5859b029, type: 3}
+  collectSprite: {fileID: 1138429991594680347, guid: e63d902a1dc7a484384448c61788731a, type: 3}
   moveSherrifSprite: {fileID: 4293373321751944483, guid: 99c70741460e145ee9f2ac46a0f32bd8, type: 3}
-  bulletSprite: {fileID: -3589110362810388115, guid: 5d4f21915eab8454b8d2eb4bc017234e, type: 3}
-  tunnelBackSprite: {fileID: -7494237282888438467, guid: c7576274e02694a4da998f2e26b5983f, type: 3}
+  bulletSprite: {fileID: 1050792917933646562, guid: d35f7bad0b8504e3685b74b41b49fadf, type: 3}
+  tunnelBackSprite: {fileID: 5239321894983582537, guid: 6725bf78ecc3b447bb32a5b49629f2b9, type: 3}
   gameCardSprites:
   - gameCardName: Card1
-    sprite: {fileID: -2824196805085877649, guid: 7d15d5f5fc8564987b128052a82c3445, type: 3}
+    sprite: {fileID: 5028308952329797234, guid: 847dafca4b6664e279d1bfd0e5d96b41, type: 3}
   - gameCardName: Card2
-    sprite: {fileID: 1017104892853355748, guid: 53708fa3d6b2c4a069ff671daa3401ba, type: 3}
+    sprite: {fileID: 3313149082098288073, guid: 849ae95d7f558453aaaf368548d0ff84, type: 3}
   - gameCardName: Card3
-    sprite: {fileID: 6227275033448905683, guid: 3cc3fb9eedc0d494d8ae2d03b0902365, type: 3}
+    sprite: {fileID: 8210932958035617845, guid: 353cbdc50a8e643aebe8174ae323bd57, type: 3}
   - gameCardName: Card4
-    sprite: {fileID: 4949937821243496450, guid: 5b32beb67c54345c78ff78754db6b73d, type: 3}
+    sprite: {fileID: 5267734173631021551, guid: b60cc39651f9740a7b4d91da4da659f3, type: 3}
   - gameCardName: Card5
-    sprite: {fileID: 6149335889562993283, guid: e7fe76456fce548b0b2820f12dec4b46, type: 3}
+    sprite: {fileID: -3677461777590330359, guid: 441520972b2b946e49a3c64eeb82c864, type: 3}
   - gameCardName: Card6
-    sprite: {fileID: 9017461232873508744, guid: 9e27902e19e0349779a8d103d938ae3e, type: 3}
+    sprite: {fileID: -5309659578199077710, guid: e075336b8b23c4b658033cd35cfb0519, type: 3}
 --- !u!1 &1116060373
 GameObject:
   m_ObjectHideFlags: 0
@@ -3679,7 +3681,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1445509794
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4034,8 +4036,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameCardDebugText: {fileID: 1445509795}
-  playDelay: 0.5
-  botPlanningDelay: 0.5
+  playDelay: 0
+  botPlanningDelay: 0
   allGameCards:
   - cardName: Card1
     turns:
@@ -4415,7 +4417,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1661902403
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5482,10 +5484,30 @@ MonoBehaviour:
   - {fileID: 190271050}
   - {fileID: 201162995}
   - {fileID: 2104228909}
+  currentCardPanel: {fileID: 0}
   currentCardImage: {fileID: 891954042}
   currentCardText: {fileID: 2134573044}
   gameCardImage: {fileID: 448984498}
   gameCardText: {fileID: 1445509795}
+  characters:
+  - id: 0
+    displayName: white
+    sprite: {fileID: 4460671459201177718, guid: b10e7e989afce4492971fd05e9107659, type: 3}
+  - id: 1
+    displayName: green
+    sprite: {fileID: 60084818999767541, guid: b44f8a7074ded462db6de6acf3846b15, type: 3}
+  - id: 2
+    displayName: blue
+    sprite: {fileID: -4172557221180382400, guid: 6bd8f951cd2ce449d8e9346687327977, type: 3}
+  - id: 3
+    displayName: pink
+    sprite: {fileID: -6262972417870039208, guid: 3c55dd96149354ac69821064467e3bb5, type: 3}
+  - id: 4
+    displayName: black
+    sprite: {fileID: 162654292077839840, guid: 9e902ea29475f494ba42080f995e6c44, type: 3}
+  - id: 5
+    displayName: red
+    sprite: {fileID: -3308541474931539498, guid: 4c7a2b75ff938486495078032c8f8abe, type: 3}
 --- !u!4 &2009257879
 Transform:
   m_ObjectHideFlags: 0
@@ -5860,7 +5882,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -145}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2134573044
 MonoBehaviour:
@@ -5909,8 +5931,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

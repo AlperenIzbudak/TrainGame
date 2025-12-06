@@ -65,12 +65,17 @@ public class GameManager : MonoBehaviour
     public RectTransform[] sheriffSpots;
     
     [Header("Current Card UI")]
+    public GameObject currentCardPanel; 
     public Image currentCardImage;   // Ortadaki kart resmi
     public TMP_Text currentCardText; // Altına yazılacak metin
     
     [Header("GameCard UI")]
     public UnityEngine.UI.Image gameCardImage;
     public TMPro.TMP_Text gameCardText;
+    
+    [Header("Characters")]
+    [Tooltip("Toplam 6 karakter: id = 0..5, sprite ve isimlerini buradan ver.")]
+    public CowboyCharacter[] characters;
     
 
     private void Awake()
@@ -93,8 +98,11 @@ public class GameManager : MonoBehaviour
         
         // 2.5) Sheriff'i başlat
         InitSheriff();
+        
+        
+        ClearCurrentCardUI();
 
-
+        
         // 3) SCOREBOARD’U KUR (satırları oluştur, paneli aç)
         if (ScoreboardManager.Instance != null && RoundManager.Instance != null)
         {
@@ -197,98 +205,131 @@ public class GameManager : MonoBehaviour
     }
 
     void SpawnPlayers()
+{
+    // Önce player için seçilen karakter ID'sini al
+    int humanCharId = 0;
+    if (characters != null && characters.Length > 0)
     {
-        // --- KARAKTER DAĞITIMI ---
+        // GameSetupData.SelectedCharacterId main menüden geliyor
+        int chosen = GameSetupData.selectedCharacterId;
+        if (chosen < 0 || chosen >= characters.Length)
+            chosen = 0; // fallback
 
-        int totalCharacters = 6; // Toplam karakter sayısı (0..5)
+        humanCharId = chosen;
+    }
 
-        // İnsan oyuncunun seçtiği karakter ID
-        int humanCharId = GameSetupData.SelectedCharacterId;
-
-        // Geçersizse 0 yap (fallback)
-        if (humanCharId < 0 || humanCharId >= totalCharacters)
-            humanCharId = 0;
-
-        // Kalan karakter ID'lerini listeye koy
-        List<int> availableForBots = new List<int>();
-        for (int id = 0; id < totalCharacters; id++)
+    // Botlar için kalan karakter ID'lerini havuza koy
+    System.Collections.Generic.List<int> botCharPool = new System.Collections.Generic.List<int>();
+    if (characters != null)
+    {
+        for (int i = 0; i < characters.Length; i++)
         {
-            if (id != humanCharId)
-                availableForBots.Add(id);
+            if (i == humanCharId) continue;
+            botCharPool.Add(i);
+        }
+    }
+
+    for (int i = 0; i < 4; i++) // 4 oyuncu
+    {
+        int trainIndex = 1;    
+        int spotIndex = i + 1; // 1,2,3,4
+
+        RectTransform playerUI = Instantiate(playerPrefab, canvas.transform, false);
+        PlayerController pc = playerUI.GetComponent<PlayerController>();
+        CardDeck deck = playerUI.GetComponent<CardDeck>();
+        CardHandDisplay display = playerUI.GetComponent<CardHandDisplay>();
+
+        // State
+        pc.trainIndex = trainIndex;
+        pc.spotIndex = spotIndex;
+        pc.isOnRoof = false;
+
+        // Pozisyon
+        RectTransform spawnSpot = GetSpotForPlayer(pc);
+        if (spawnSpot != null)
+            playerUI.anchoredPosition = spawnSpot.anchoredPosition;
+
+        // İnsan / Bot + isim
+        if (i == 0)
+        {
+            pc.isBot = false;
+
+            string playerName = string.IsNullOrWhiteSpace(GameSetupData.playerName)
+                ? "Player"
+                : GameSetupData.playerName.Trim();
+
+            pc.SetPlayerName(playerName);
+        }
+        else
+        {
+            pc.isBot = true;
+            pc.SetPlayerName("Bot " + i);
         }
 
-        // Kendi içinde karıştıralım ki bot karakterleri random olsun
-        for (int i = 0; i < availableForBots.Count; i++)
+        // Karakter ataması
+        if (characters != null && characters.Length > 0)
         {
-            int swapIdx = Random.Range(i, availableForBots.Count);
-            int tmp = availableForBots[i];
-            availableForBots[i] = availableForBots[swapIdx];
-            availableForBots[swapIdx] = tmp;
-        }
+            CowboyCharacter chosenChar = null;
 
-        int botCharAssignIndex = 0;
-        
-        
-        
-        for (int i = 0; i < 4; i++) // 4 oyuncu
-        {
-            int trainIndex = 1;   // hepsi 1. vagon
-            int spotIndex = i + 1; // 1,2,3,4
-            
-            // Player UI oluştur
-            RectTransform playerUI = Instantiate(playerPrefab, canvas.transform, false);
-            PlayerController pc = playerUI.GetComponent<PlayerController>();
-            CardDeck deck = playerUI.GetComponent<CardDeck>();
-            CardHandDisplay display = playerUI.GetComponent<CardHandDisplay>();
-
-            // State
-            pc.trainIndex = trainIndex;
-            pc.spotIndex = spotIndex;
-            pc.isOnRoof = false;  // içeride başlıyor
-
-            // Pozisyon
-            RectTransform spawnSpot = GetSpotForPlayer(pc);
-            if (spawnSpot != null)
-                playerUI.anchoredPosition = spawnSpot.anchoredPosition;
-
-            // İnsan mı bot mu?
             if (i == 0)
             {
-                pc.isBot = false;
-                // Ana menüden gelen ismi kullan, yoksa "Player"
-                string nameToUse = string.IsNullOrWhiteSpace(GameSetupData.PlayerName)
-                    ? "Player"
-                    : GameSetupData.PlayerName.Trim();
-
-                pc.SetPlayerName(nameToUse);
-
-                // Karakter ID'sini de PlayerController'a yaz
-                pc.selectedCharacterId = GameSetupData.SelectedCharacterId;
+                // İnsan oyuncu için seçilen ID
+                foreach (var ch in characters)
+                {
+                    if (ch != null && ch.id == humanCharId)
+                    {
+                        chosenChar = ch;
+                        break;
+                    }
+                }
             }
             else
             {
-                pc.isBot = true;
-                pc.SetPlayerName("Bot " + i);
+                if (botCharPool.Count > 0)
+                {
+                    int poolIdx = Random.Range(0, botCharPool.Count);
+                    int charId = botCharPool[poolIdx];
+                    botCharPool.RemoveAt(poolIdx);
+
+                    foreach (var ch in characters)
+                    {
+                        if (ch != null && ch.id == charId)
+                        {
+                            chosenChar = ch;
+                            break;
+                        }
+                    }
+                }
             }
 
-            // Başlangıç altınlarını ver (2 bar, her biri random kredi)
-            GiveStartingGold(pc);
-            
-            // Deste
-            deck.GenerateRandomDeck(6);
-            Debug.Log($"{pc.playerName} deck: {string.Join(", ", deck.playerDeck)}");
-            
-            // El UI
-            display.Setup(handPanel, cardButtonPrefab, cardDatabase, deck);
-            if (!pc.isBot)
-                display.DisplayCards();
-
-            // RoundManager’a register et
-            RoundManager.Instance.RegisterPlayer(pc);
+            if (chosenChar != null)
+            {
+                pc.ApplyCharacter(chosenChar);
+            }
+            else
+            {
+                Debug.LogWarning("[GameManager] No character assigned for player index " + i);
+            }
         }
 
-        // Scoreboard Setup, Start’ta yapıyoruz
+        // Başlangıç gold / credits GameManager içinde başka yerde ayarlıyorsan orayla uyumlu bırak
+        // Örneğin:
+        // pc.goldBars = 2; // random vs. yapıyorsan o mantığı koru
+
+        // Deste
+        deck.GenerateRandomDeck(6);
+        Debug.Log($"{pc.playerName} deck: {string.Join(", ", deck.playerDeck)}");
+
+        // El UI
+        display.Setup(handPanel, cardButtonPrefab, cardDatabase, deck);
+        if (!pc.isBot)
+            display.DisplayCards();
+
+        // RoundManager’a register et
+        RoundManager.Instance.RegisterPlayer(pc);
     }
+}
+
     
     private void GiveStartingGold(PlayerController pc)
     {
@@ -593,6 +634,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager] {pc.playerName} was sent to the roof by the Sheriff in wagon {pc.trainIndex}.");
     }
 
+    
     public void ClearCurrentCardUI()
     {
         if (currentCardImage != null)
@@ -602,9 +644,11 @@ public class GameManager : MonoBehaviour
         }
 
         if (currentCardText != null)
-        {
             currentCardText.text = "";
-        }
+
+        // En önemlisi: paneli tamamen gizle
+        if (currentCardPanel != null)
+            currentCardPanel.SetActive(false);
     }
 
     public void ShowCurrentCard(string cardKey, string ownerName, string phaseLabel)
@@ -614,6 +658,10 @@ public class GameManager : MonoBehaviour
             ClearCurrentCardUI();
             return;
         }
+
+        // Kart gösterilecekse paneli aç
+        if (currentCardPanel != null)
+            currentCardPanel.SetActive(true);
 
         bool isTunnelBack = (cardKey == "tunnelBack");
 
@@ -640,9 +688,7 @@ public class GameManager : MonoBehaviour
             {
                 // Gerçek kart ismini saklıyoruz
                 if (!string.IsNullOrEmpty(ownerName))
-                    currentCardText.text = $"{ownerName}: [Hidden card] ({phaseLabel})";
-                else
-                    currentCardText.text = "[Hidden card]";
+                    currentCardText.text = $"{ownerName}: [Tunnel]";
             }
             else
             {
@@ -697,7 +743,8 @@ public class GameManager : MonoBehaviour
                 goldBars = pc.goldBars,
                 credits = pc.credits,    
                 isBot = pc.isBot,
-                bulletsGiven = pc.bulletsGiven
+                bulletsGiven = pc.bulletsGiven,
+                characterId  = pc.characterId 
             };
 
             list.Add(data);

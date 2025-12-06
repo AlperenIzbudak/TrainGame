@@ -69,8 +69,8 @@ public class MainMenuUI : MonoBehaviour
 
         string trimmedName = nameInput.text.Trim();
 
-        GameSetupData.PlayerName = trimmedName;
-        GameSetupData.SelectedCharacterId = selectedCharacterId;
+        GameSetupData.playerName = trimmedName;
+        GameSetupData.selectedCharacterId = selectedCharacterId;
 
         Debug.Log("[MainMenuUI] Loading scene: " + gameSceneName);
         SceneManager.LoadScene(gameSceneName);
@@ -87,7 +87,7 @@ public class MainMenuUI : MonoBehaviour
         if (nameErrorText != null)
         {
             if (!validName)
-                nameErrorText.text = "İsim en az 1 karakter olmalı.";
+                nameErrorText.text = "Name must be at least 1 character";
             else
                 nameErrorText.text = "";
         }

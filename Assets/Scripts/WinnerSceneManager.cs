@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class WinnerSceneManager : MonoBehaviour
 {
-    [Header("Podium Anchors (character positions)")]
-    public RectTransform firstPlaceAnchor;
-    public RectTransform secondPlaceAnchor;
-    public RectTransform thirdPlaceAnchor;
-    
-    [Header("Player Prefab (same as in GameManager)")]
-    public RectTransform playerPrefab;
+    [Header("Podium Images (Positions/s1,s2,s3 içindeki Image bileşenleri)")]
+    public Image firstPlaceImage;   // s1 altındaki Image
+    public Image secondPlaceImage;  // s2 altındaki Image
+    public Image thirdPlaceImage;   // s3 altındaki Image
 
-    [Header("Others List")]
-    public RectTransform othersListParent;
-    public GameObject otherRowPrefab; // içinde TMP_Text olan basit bir row prefab
+    [Header("Karakter verileri (MainMenu/GameManager ile aynı sıra)")]
+    public CowboyCharacter[] characters;
+
+    [Header("Others list")]
+    public RectTransform othersListParent;  // ScoreBoard objesinin RectTransform'u
+    public GameObject otherRowPrefab;       // İçinde *tek* TMP_Text olan row prefab
 
     private void Start()
     {
@@ -26,39 +28,74 @@ public class WinnerSceneManager : MonoBehaviour
             return;
         }
 
-        // players şimdiden credits'e göre sıralı geliyor (GameManager.ShowFinalResults)
-        // Yine de emin olmak istersen:
+        // Emin olmak için kredilere göre sıralayalım (büyükten küçüğe)
         players.Sort((a, b) => b.credits.CompareTo(a.credits));
 
-        ShowTopThree(players);
+        ShowPodium(players);
         ShowOthers(players);
     }
 
-    private void ShowTopThree(List<FinalPlayerData> players)
+    // ------------------------------------------------------
+    //  PODIUM
+    // ------------------------------------------------------
+
+    private void ShowPodium(List<FinalPlayerData> players)
     {
-        // 1. yer
-        if (players.Count > 0 && firstPlaceAnchor != null && playerPrefab != null)
-        {
-            CreateWinnerPlayerView(players[0], firstPlaceAnchor);
-        }
+        if (players.Count > 0)
+            SetPodiumSlot(firstPlaceImage, players[0]);
 
-        // 2. yer
-        if (players.Count > 1 && secondPlaceAnchor != null && playerPrefab != null)
-        {
-            CreateWinnerPlayerView(players[1], secondPlaceAnchor);
-        }
+        if (players.Count > 1)
+            SetPodiumSlot(secondPlaceImage, players[1]);
 
-        // 3. yer
-        if (players.Count > 2 && thirdPlaceAnchor != null && playerPrefab != null)
+        if (players.Count > 2)
+            SetPodiumSlot(thirdPlaceImage, players[2]);
+    }
+
+    private void SetPodiumSlot(Image img, FinalPlayerData data)
+    {
+        if (img == null) return;
+
+        var ch = FindCharacterById(data.characterId);
+        if (ch != null && ch.sprite != null)
         {
-            CreateWinnerPlayerView(players[2], thirdPlaceAnchor);
+            img.sprite = ch.sprite;
+            img.enabled = true;
+        }
+        else
+        {
+            // Karakter bulunamazsa, en azından görüntü bozuk olmasın
+            img.enabled = false;
         }
     }
+
+    private CowboyCharacter FindCharacterById(int id)
+    {
+        if (characters == null) return null;
+
+        foreach (var ch in characters)
+        {
+            if (ch != null && ch.id == id)
+                return ch;
+        }
+
+        return null;
+    }
+
+    // ------------------------------------------------------
+    //  OTHERS SCOREBOARD
+    // ------------------------------------------------------
 
     private void ShowOthers(List<FinalPlayerData> players)
     {
         if (othersListParent == null || otherRowPrefab == null) return;
 
+        // ==== ÖNEMLİ: Eski satırları temizle, yoksa üst üste birikiyor ====
+        for (int i = othersListParent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(othersListParent.GetChild(i).gameObject);
+        }
+
+        // Şimdi listeden bir kez oluştur
         for (int i = 0; i < players.Count; i++)
         {
             var p = players[i];
@@ -98,32 +135,14 @@ public class WinnerSceneManager : MonoBehaviour
             }
         }
     }
-    private void CreateWinnerPlayerView(FinalPlayerData data, RectTransform anchor)
+
+
+    // ------------------------------------------------------
+    //  BUTTON
+    // ------------------------------------------------------
+
+    public void OnReturnToMenuClicked()
     {
-        // playerPrefab'tan yeni bir karakter instantiate et
-        RectTransform playerObj = Instantiate(playerPrefab, anchor.parent);
-        playerObj.anchoredPosition = anchor.anchoredPosition;
-
-        // Eğer prefab üzerinde PlayerController varsa, oradan ismi set edebilirsin
-        var pc = playerObj.GetComponent<PlayerController>();
-        if (pc != null)
-        {
-            pc.SetPlayerName(data.name);
-            // Credits / goldBars göstermek istersen:
-            pc.goldBars = data.goldBars;
-            // pc.credits = data.credits;  // field varsa
-            // pc.UpdateDebugLabel();      // public yaparsan çağırabilirsin
-        }
-
-        // Eğer sadece üstünde isim yazan bir TMP_Text istiyorsan:
-        var texts = playerObj.GetComponentsInChildren<TMP_Text>();
-        foreach (var t in texts)
-        {
-            if (t.gameObject.name.Contains("Name"))
-            {
-                t.text = data.name;
-                break;
-            }
-        }
+        SceneManager.LoadScene("MainMenu");
     }
 }

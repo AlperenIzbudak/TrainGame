@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using TMPro;
 using Unity.VisualScripting;
+using UnityEngine.UI;   // <-- Image için
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,37 +21,36 @@ public class PlayerController : MonoBehaviour
     [Header("Bullets")]
     public int maxBulletCount = 6;   // Toplam mermi sayısı
     public int bulletsUsed = 0;
-    
-    [Header("Bullet Stats")]
-    public int bulletsGiven = 0;   // başkalarına verdiği mermi kartı sayısı
+    public int bulletsGiven = 0;
     
     [Header("Gold")]
     public int goldBars = 0;   // sahip olduğu bar sayısı
     public int credits = 0;    // toplam kredi değeri
 
+    [Header("Character")]
+    [Tooltip("Seçilen karakterin ID'si (0..5)")]
+    public int characterId = -1;
+
+    [Tooltip("Prefab üzerindeki cowboy görseli (Image)")]
+    public Image characterImage;
 
     [Header("UI (optional)")]
-    public TMP_Text debugLabel; // İstersen canvas üstüne koy, boş bırakabilirsin
+    public TMP_Text debugLabel; 
 
     [Header("Player Name ")]
     public TMP_Text nameLabel;
-    
-    [Header("Character")]
-    public int selectedCharacterId = -1;  
-    
+
+
     private void Start()
     {
-        // Negatif olmasın, asıl başlangıç değerlerini GameManager verecek
         if (goldBars < 0) goldBars = 0;
         if (credits < 0) credits = 0;
 
         UpdateDebugLabel();
 
         Debug.Log($"{(isBot ? "BOT" : "PLAYER")} {playerName} spawned. " +
-                  $"Status: {(isBot ? "Bot" : "NotBot")} (train={trainIndex}, spot={spotIndex}, roof={isOnRoof})");
+                  $"Status: {(isBot ? "Bot" : "NotBot")} (train={trainIndex}, spot={spotIndex}, roof={isOnRoof}, charId={characterId})");
     }
-
-
 
     public void SetPlayerName(string name)
     {
@@ -66,6 +66,19 @@ public class PlayerController : MonoBehaviour
         UpdateDebugLabel();
     }
 
+    public void ApplyCharacter(CowboyCharacter data)
+    {
+        if (data == null) return;
+
+        characterId = data.id;
+
+        if (characterImage != null && data.sprite != null)
+            characterImage.sprite = data.sprite;
+
+        // İstersen isim label'ına da karakter adını ekleyebilirsin
+        if (nameLabel != null)
+            nameLabel.text = playerName; // + $" ({data.displayName})";
+    }
     
     private void UpdateDebugLabel()
     {
@@ -74,5 +87,4 @@ public class PlayerController : MonoBehaviour
             debugLabel.text = playerName;
         }
     }
-
 }
