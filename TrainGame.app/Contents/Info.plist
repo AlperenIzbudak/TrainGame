@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>TrainGame</string>
     <key>CFBundleGetInfoString</key>
-    <string>Unity Player version 6000.0.32f1 (b2e806cf271c). (c) 2005-2024 Unity Technologies. All rights reserved.</string>
+    <string>Unity Player version 6000.2.7f2 (2b518236b676). (c) 2005-2025 Unity Technologies. All rights reserved.</string>
     <key>CFBundleIconFile</key>
     <string>PlayerIcon.icns</string>
     <key>CFBundleIdentifier</key>
@@ -40,6 +40,6 @@
     <key>NSPrincipalClass</key>
     <string>PlayerApplication</string>
     <key>UnityBuildNumber</key>
-    <string>b2e806cf271c</string>
+    <string>2b518236b676</string>
   </dict>
 </plist>
