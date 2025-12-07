@@ -19,7 +19,15 @@ public class RoundManager : MonoBehaviour
     [Header("Debug UI")]
     [Tooltip("Şu anda hangi Game Card / slot oynandığını göstermek için")]
     public TMP_Text gameCardDebugText;
-
+    
+    [Header("UI")]
+    [Tooltip("Turn bilgisini göstereceğimiz TMP_Text (örn: 'Your turn!' / 'Waiting for Bot 3...')")]
+    public TMP_Text turnInfoText;
+    
+    [Header("Phase Timings")]
+    [Tooltip("Planning phase bittikten sonra play phase'e geçmeden önce beklenecek süre (saniye).")]
+    public float planningToPlayDelay = 1f;
+    
     [Header("General")]
     public float playDelay = 0.5f;
     public float botPlanningDelay = 0.5f;
@@ -124,6 +132,10 @@ public class RoundManager : MonoBehaviour
     {
         Debug.Log($"[RoundManager] Starting GameCard: {config.cardName}");
 
+        
+        if (GameManager.Instance != null)
+            GameManager.Instance.HideCurrentCard();
+        
         // Debug text formatını yazan fonksiyon vs...
         string line = BuildGameCardDescription(config, _currentGameCardIndex);
         UpdateGameCardDebug(line);
@@ -154,9 +166,41 @@ public class RoundManager : MonoBehaviour
         BeginPlanningPhaseForCurrentGameCard();
     }
 
+    /// <summary>
+    /// Botun elindeki desteden oynanabilir (bullet olmayan) ilk kartı bulur.
+    /// Bulursa true döner, cardName ve index'i set eder; bulamazsa false.
+    /// </summary>
+    private bool TryGetBotPlayableCard(CardDeck deck, out string cardName, out int index)
+    {
+        cardName = null;
+        index = -1;
+
+        if (deck == null || deck.playerDeck == null)
+            return false;
+
+        for (int i = 0; i < deck.playerDeck.Count; i++)
+        {
+            string c = deck.playerDeck[i];
+
+            // Kurşun kartı oynanamaz
+            if (c == CardDeck.BulletCardKey)
+                continue;
+
+            cardName = c;
+            index = i;
+            return true;
+        }
+
+        return false; // Hiç oynanabilir kart yok
+    }
+
+    
 
     private void GoToNextGameCard()
     {
+        if (GameManager.Instance != null)
+            GameManager.Instance.ClearCurrentCardUI();
+        
         _currentGameCardIndex++;
 
         if (_currentGameCardIndex >= _selectedGameCards.Count)
@@ -237,6 +281,16 @@ public class RoundManager : MonoBehaviour
 
         PromptNextPlayer();
     }
+    
+    private IEnumerator StartPlayPhaseAfterDelay()
+    {
+        // İstersen burada turn yazısını da temizleyebilirsin:
+        // UpdateTurnInfoUI(null);
+
+        yield return new WaitForSeconds(planningToPlayDelay);
+
+        StartPlayPhaseForCurrentGameCard();
+    }
 
 
     private void PromptNextPlayer()
@@ -249,18 +303,23 @@ public class RoundManager : MonoBehaviour
         {
             planningPhaseActive = false;
             Debug.Log($"[RoundManager] Planning finished for GameCard #{_currentGameCardIndex + 1}. Total planned cards: {plannedCards.Count}");
-            StartPlayPhaseForCurrentGameCard();
+            StartCoroutine(StartPlayPhaseAfterDelay());
             return;
+           
         }
 
         TurnType slotType = _currentSlots[_currentSlotIndex];
 
         PlayerController pc = GetExpectedPlanningPlayer();
+        
+        
         if (pc == null)
         {
             Debug.LogError("[RoundManager] PromptNextPlayer: expected player is null!");
             return;
         }
+        
+        UpdateTurnInfoUI(pc);
 
         if (pc.isBot)
         {
@@ -280,39 +339,64 @@ public class RoundManager : MonoBehaviour
     }
 
     private IEnumerator BotPlayAfterDelay(PlayerController pc, TurnType slotType)
+{
+    yield return new WaitForSeconds(botPlanningDelay);
+
+    CardDeck deck = pc.GetComponent<CardDeck>();
+    if (deck == null)
     {
-        yield return new WaitForSeconds(botPlanningDelay);
+        Debug.LogError("[RoundManager] BotPlayAfterDelay: CardDeck yok.");
+        AdvanceTurn(slotType);
+        yield break;
+    }
 
-        CardDeck deck = pc.GetComponent<CardDeck>();
-        if (deck == null)
-        {
-            Debug.LogError("[RoundManager] BotPlayAfterDelay: CardDeck yok.");
-            AdvanceTurn(slotType);
-            yield break;
-        }
+    if (deck.playerDeck.Count == 0)
+    {
+        Debug.LogWarning($"[RoundManager] Bot {pc.playerName} has no cards left!");
+        AdvanceTurn(slotType);
+        yield break;
+    }
 
-        if (deck.playerDeck.Count == 0)
-        {
-            Debug.LogWarning($"[RoundManager] Bot {pc.playerName} has no cards left!");
-            AdvanceTurn(slotType);
-            yield break;
-        }
+    // 🔴 1) Önce oynanabilir kart var mı bak (bullet hariç)
+    if (!TryGetBotPlayableCard(deck, out string cardName, out int cardIndex))
+    {
+        // Elinde sadece bullet kartları var → BOT da otomatik Draw & Pass yapsın
+        Debug.Log($"[RoundManager] Bot {pc.playerName} has only bullet cards. Doing auto Draw & Pass.");
 
-        string cardName = deck.playerDeck[0];
-        deck.playerDeck.RemoveAt(0);
+        // 1) Main deck'ten 2 kart çekip eline ekle
+        deck.DrawExtraCardsFromMainDeck(2);
 
-        plannedCards.Add(new PlannedCard(pc, cardName, slotType));
-        Debug.Log($"[RoundManager] BOT {pc.playerName} played {cardName} in slot {_currentSlotIndex} ({slotType})");
+        // 2) PlannedCards'e drawAndPass kartını ekle (slot tüketilsin)
+        plannedCards.Add(new PlannedCard(pc, "drawAndPass", slotType));
 
+        // 3) UI'da current card'ı göster (Tunnel ise kapalı, değilse drawAndPass sprite'ı)
         if (GameManager.Instance != null)
         {
-            // Tunnel turunda kartı kapalı göster
-            string uiKey = (slotType == TurnType.Tunnel) ? "tunnelBack" : cardName;
+            string uiKey = (slotType == TurnType.Tunnel) ? "tunnelBack" : "drawAndPass";
             GameManager.Instance.ShowCurrentCard(uiKey, pc.playerName, "Planning");
         }
 
+        // 4) Sıradaki oyuncuya / slota geç
         AdvanceTurn(slotType);
+        yield break;
     }
+
+    // 🔵 2) Buraya geldiysek: oynanabilir bir kart bulduk (bullet değil)
+    deck.playerDeck.RemoveAt(cardIndex);
+
+    plannedCards.Add(new PlannedCard(pc, cardName, slotType));
+    Debug.Log($"[RoundManager] BOT {pc.playerName} played {cardName} in slot {_currentSlotIndex} ({slotType})");
+
+    if (GameManager.Instance != null)
+    {
+        // Tunnel turunda kartı kapalı göster
+        string uiKey = (slotType == TurnType.Tunnel) ? "tunnelBack" : cardName;
+        GameManager.Instance.ShowCurrentCard(uiKey, pc.playerName, "Planning");
+    }
+
+    AdvanceTurn(slotType);
+}
+
     
     private void AdvanceTurn(TurnType slotType)
     {
@@ -361,6 +445,7 @@ public class RoundManager : MonoBehaviour
             Debug.LogError("[RoundManager] OnDrawAndPassClicked: CardDeck not found on current player");
             return;
         }
+        
 
         OnDrawAndPassSelected(deck);
     }
@@ -395,6 +480,11 @@ public class RoundManager : MonoBehaviour
             // Tunnel'da yine kapalı kart gösteriyoruz
             string uiKey = (slotType == TurnType.Tunnel) ? "tunnelBack" : "drawAndPass";
             GameManager.Instance.ShowCurrentCard(uiKey, pc.playerName, "Planning");
+        }
+        
+        if (SoundManager.Instance != null && !pc.isBot)
+        {
+            SoundManager.Instance.PlayPlanningCardPlace();
         }
 
         AdvanceTurn(slotType);
@@ -438,8 +528,12 @@ public class RoundManager : MonoBehaviour
             string uiKey = (slotType == TurnType.Tunnel) ? "tunnelBack" : cardName;
             GameManager.Instance.ShowCurrentCard(uiKey, pc.playerName, "Planning");
         }
-
-// Ekranı güncelle
+        
+        if (SoundManager.Instance != null && !pc.isBot)
+        {
+            SoundManager.Instance.PlayPlanningCardPlace();
+        }
+        
         CardHandDisplay display = pc.GetComponent<CardHandDisplay>();
         if (display != null)
             display.DisplayCards();
@@ -473,6 +567,9 @@ public class RoundManager : MonoBehaviour
             PlannedCard card = plannedCards[i];
             Debug.Log($"[RoundManager] Resolving card #{i + 1}: {card.owner.playerName} -> {card.cardName} ({card.turnType})");
 
+            // PLAY PHASE İÇİN DE TURN TEXT'İ GÜNCELLE
+            UpdateTurnInfoUI(card.owner);
+            
             // TUNNEL: kartlar artık Play fazında açılıyor, o yüzden burada gösteriyoruz
             if (GameManager.Instance != null)
                 GameManager.Instance.ShowCurrentCard(card.cardName, card.owner.playerName, "Play");
@@ -489,10 +586,20 @@ public class RoundManager : MonoBehaviour
 
             yield return new WaitForSeconds(playDelay);
         }
+        
+        if (GameManager.Instance != null)
+            GameManager.Instance.HideCurrentCard();
+
+        
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayGameCardEnd();
+        }
 
         Debug.Log("[RoundManager] All cards resolved for this GameCard.");
         playRoutine = null;
-
+        
+        
         GoToNextGameCard();
     }
 
@@ -503,4 +610,32 @@ public class RoundManager : MonoBehaviour
             gameCardDebugText.text = msg;
         }
     }
+    
+    private void UpdateTurnInfoUI(PlayerController pc)
+    {
+        if (turnInfoText == null)
+            return;
+
+        // Parametre null ise text'i temizle
+        if (pc == null)
+        {
+            turnInfoText.text = "";
+            return;
+        }
+
+        if (!pc.isBot)
+        {
+            // İnsan oyuncu
+            turnInfoText.text = "Your turn!";
+        }
+        else
+        {
+            // Bot
+            turnInfoText.text = $"Waiting for {pc.playerName}...";
+        }
+    }
+    
+    
+
+
 }

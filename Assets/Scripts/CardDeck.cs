@@ -11,7 +11,7 @@ public class CardDeck : MonoBehaviour
         "moveHorizontally", "moveHorizontally",
         "moveVertically",
         "collect", "collect",
-        "moveSherrif"
+        "moveSheriff"
     };
     
     public const string BulletCardKey = "bullet";

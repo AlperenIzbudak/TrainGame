@@ -109,7 +109,7 @@ public class CardHandDisplay : MonoBehaviour
             case "moveHorizontally": return "Move Horiz.";
             case "moveVertically":   return "Move Vert.";
             case "collect":          return "Collect";
-            case "moveSherrif":      return "Move Sheriff";
+            case "moveSheriff":      return "Move Sheriff";
             case "bullet":           return "Bullet";
             default:                 return key;
         }

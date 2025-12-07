@@ -513,39 +513,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-
-
-    private void ApplySheriffEffectInCurrentWagon()
-    {
-        if (RoundManager.Instance == null)
-            return;
-
-        foreach (var pc in RoundManager.Instance.players)
-        {
-            if (pc == null) continue;
-
-            // Aynı vagon + İÇERDE olan oyuncular
-            if (pc.trainIndex != sheriffTrainIndex) continue;
-            if (pc.isOnRoof) continue;
-
-            // 1) Oyuncunun main deck'ine 1 bullet kartı ekle
-            CardDeck deck = pc.GetComponent<CardDeck>();
-            if (deck != null)
-            {
-                deck.AddBulletCardToMainDeck();
-                Debug.Log($"[GameManager] Sheriff gave 1 bullet to {pc.playerName}.");
-            }
-
-            // 2) Oyuncuyu roof'a kov
-            pc.isOnRoof = true;
-
-            RectTransform roofSpot = GetRoofSpot(pc.trainIndex, pc.spotIndex);
-            RectTransform playerRect = pc.GetComponent<RectTransform>();
-            if (roofSpot != null && playerRect != null)
-                playerRect.anchoredPosition = roofSpot.anchoredPosition;
-        }
-    }
-
+    
     public int GetSheriffTrainIndex()
     {
         return sheriffTrainIndex;
@@ -712,11 +680,9 @@ public class GameManager : MonoBehaviour
             case "moveHorizontally": return "Move Horiz.";
             case "moveVertically":   return "Move Vert.";
             case "collect":          return "Collect";
-            case "moveSherrif":      return "Move Sheriff";
+            case "moveSheriff":      return "Move Sheriff";
             case "drawAndPass":      return "Draw & Pass";
             case "bullet":           return "Bullet";
-
-            // Sadece UI için kullandığımız fake kart
             case "tunnelBack":       return "Hidden Card";
 
             default:                 return key;
@@ -786,6 +752,12 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] New hands dealt for next GameCard.");
     }
 
+    
+    public void HideCurrentCard()
+    {
+        if (currentCardPanel != null)
+            currentCardPanel.SetActive(false);
+    }
 
 
 

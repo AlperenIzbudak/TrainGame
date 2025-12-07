@@ -126,7 +126,7 @@ MonoBehaviour:
   - punch
   - collect
   - collect
-  - moveSherrif
+  - moveSheriff
   - moveVertically
   playerDeck: []
 --- !u!114 &-8957589708416769746

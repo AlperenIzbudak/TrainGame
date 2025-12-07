@@ -15,7 +15,7 @@ public class CardSpriteDatabase : MonoBehaviour
     public Sprite moveHorizontallySprite;
     public Sprite moveVerticallySprite;
     public Sprite collectSprite;
-    public Sprite moveSherrifSprite;
+    public Sprite moveSheriffSprite;
 
     [Header("Special sprites")]
     public Sprite bulletSprite;        // Bullet elde görünür ama oynanamaz
@@ -42,10 +42,10 @@ public class CardSpriteDatabase : MonoBehaviour
                 return moveVerticallySprite;
             case "collect":
                 return collectSprite;
-            case "moveSherrif":
-                return moveSherrifSprite;
+            case "moveSheriff":
+                return moveSheriffSprite;
 
-            case CardDeck.BulletCardKey: // "bullet"
+            case CardDeck.BulletCardKey: 
                 return bulletSprite;
 
             case "tunnelBack":

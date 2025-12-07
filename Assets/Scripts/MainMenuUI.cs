@@ -19,11 +19,17 @@ public class MainMenuUI : MonoBehaviour
     [Header("Scene")]
     // Oyun sahnenin ismi (Build Settings'te ne yazıyorsa aynısı)
     public string gameSceneName = "Board" ;
+    
+    [Header("Credits UI")]
+    [SerializeField] private GameObject creditsPanel;
+    [SerializeField] private TMP_Text creditsText;
 
     int selectedCharacterId = -1;
 
     void Start()
     {
+        if (creditsPanel != null) creditsPanel.SetActive(false);
+        
         // Başlangıçta
         selectedCharacterId = -1;
 
@@ -140,5 +146,17 @@ public class MainMenuUI : MonoBehaviour
 
             btn.colors = colors;
         }
+    }
+    
+    public void OnCreditsButtonClicked()
+    {
+        if (creditsPanel != null)
+            creditsPanel.SetActive(true);
+    }
+
+    public void OnCloseCreditsClicked()
+    {
+        if (creditsPanel != null)
+            creditsPanel.SetActive(false);
     }
 }

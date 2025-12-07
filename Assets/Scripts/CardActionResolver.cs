@@ -80,8 +80,8 @@ public class CardActionResolver : MonoBehaviour
                 HandleDrawAndPass(card);
                 break;
 
-            case "moveSherrif":
-                HandleMoveSherrif(card);
+            case "moveSheriff":
+                HandleMoveSheriff(card);
                 break;
 
             default:
@@ -130,7 +130,11 @@ public class CardActionResolver : MonoBehaviour
         {
             leftButton.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("moveHorizontally");
+                
                 ApplyHorizontalMove(pc, -1);
+                
                 horizontalChoicePanel.SetActive(false);
                 FinishNow();
             });
@@ -140,6 +144,9 @@ public class CardActionResolver : MonoBehaviour
         {
             rightButton.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("moveHorizontally");
+                
                 ApplyHorizontalMove(pc, +1);
                 horizontalChoicePanel.SetActive(false);
                 FinishNow();
@@ -191,6 +198,7 @@ public class CardActionResolver : MonoBehaviour
             bool collected = GameManager.Instance.TryCollectGold(pc);
             if (!collected)
                 Debug.Log("[CardActionResolver] Bot tried to collect but no gold.");
+            
             FinishNow();
             return;
         }
@@ -229,6 +237,11 @@ public class CardActionResolver : MonoBehaviour
                 {
                     Debug.LogWarning("[CardActionResolver] Collect button pressed but no gold (race condition).");
                 }
+                else
+                {
+                    if (SoundManager.Instance != null)
+                        SoundManager.Instance.PlayActionForCard("collect");
+                }
 
                 collectPanel.SetActive(false);
                 FinishNow();
@@ -240,7 +253,7 @@ public class CardActionResolver : MonoBehaviour
             collectButton.gameObject.SetActive(false);
             collectMessageText.text = "No gold bars";
 
-            StartCoroutine(ShowMessageAndFinish(collectPanel, 0.5f));
+            StartCoroutine(ShowMessageAndFinish(collectPanel, 1f));
         }
     }
 
@@ -279,15 +292,15 @@ public class CardActionResolver : MonoBehaviour
         {
             if (attacker.isBot)
             {
-                Debug.Log("[CardActionResolver] Punch: no one at wagon.");
+                Debug.Log("[CardActionResolver] Punch: no one at wagon!");
                 FinishNow();
                 return;
             }
             
             punchPanel.SetActive(true);
-            punchMessageText.text = "No one at wagon";
+            punchMessageText.text = "No one at wagon!";
             ClearPunchButtons();
-            StartCoroutine(ShowMessageAndFinish(punchPanel, 0.5f));
+            StartCoroutine(ShowMessageAndFinish(punchPanel, 1f));
             return;
         }
 
@@ -313,6 +326,9 @@ public class CardActionResolver : MonoBehaviour
 
             btn.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("punch");
+                
                 ResolvePunchOnTarget(attacker, captured, showUI: true);
             });
         }
@@ -340,7 +356,7 @@ public class CardActionResolver : MonoBehaviour
                     punchMessageText.text = $"{target.playerName} has no gold!";
             }
 
-            StartCoroutine(ShowMessageAndFinish(punchPanel, 0.5f));
+            StartCoroutine(ShowMessageAndFinish(punchPanel, 1));
         }
         else
         {
@@ -389,7 +405,7 @@ public class CardActionResolver : MonoBehaviour
         TMP_Text btnText = verticalButton.GetComponentInChildren<TMP_Text>();
         if (btnText != null)
         {
-            btnText.text = currentlyOnRoof ? "go inside" : "go roof";
+            btnText.text = currentlyOnRoof ? "GO INSIDE" : "GO ROOF";
         }
 
         // Eski dinleyicileri temizle
@@ -398,6 +414,9 @@ public class CardActionResolver : MonoBehaviour
         // Yeni tıklama davranışı
         verticalButton.onClick.AddListener(() =>
         {
+            if (SoundManager.Instance != null)
+                SoundManager.Instance.PlayActionForCard("moveVertically");
+            
             ApplyVerticalMove(pc);
             verticalChoicePanel.SetActive(false);
             FinishNow();
@@ -487,9 +506,9 @@ public class CardActionResolver : MonoBehaviour
             }
 
             punchPanel.SetActive(true);
-            punchMessageText.text = "No one to shoot";
+            punchMessageText.text = "No one to shoot!";
             ClearPunchButtons();
-            StartCoroutine(ShowMessageAndFinish(punchPanel, 0.5f));
+            StartCoroutine(ShowMessageAndFinish(punchPanel, 1f));
             return;
         }
 
@@ -516,6 +535,9 @@ public class CardActionResolver : MonoBehaviour
 
             btn.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("fire");
+                
                 ResolveFireOnTarget(attacker, captured, showUI: true);
             });
         }
@@ -561,13 +583,13 @@ public class CardActionResolver : MonoBehaviour
 
             if (punchMessageText != null)
             {
-                string msg = $"{attacker.playerName} shot {target.playerName}! (+1 bullet to their deck)";
+                string msg = $"{attacker.playerName} shot {target.playerName}!";
                 if (gotReward)
                     msg += "\nAll bullets used → +4 gold!";
                 punchMessageText.text = msg;
             }
 
-            StartCoroutine(ShowMessageAndFinish(punchPanel, 0.5f));
+            StartCoroutine(ShowMessageAndFinish(punchPanel, 1f));
         }
         else
         {
@@ -576,9 +598,9 @@ public class CardActionResolver : MonoBehaviour
         }
     }
 
-    // ==================== MOVE SHERRIF ====================
+    // ==================== MOVE SHERIFF ====================
 
-    private void HandleMoveSherrif(PlannedCard card)
+    private void HandleMoveSheriff(PlannedCard card)
     {
         PlayerController pc = card.owner;
 
@@ -600,7 +622,7 @@ public class CardActionResolver : MonoBehaviour
         // PLAYER → MoveHorizontally ile aynı UI'yi kullan
         if (horizontalChoicePanel == null || leftButton == null || rightButton == null)
         {
-            Debug.LogError("[CardActionResolver] MoveSherrif: Horizontal choice UI not assigned!");
+            Debug.LogError("[CardActionResolver] MoveSheriff: Horizontal choice UI not assigned!");
             // UI yoksa fallback: mantıklı bir yön seçelim
             int dir = DecideBotHorizontalDirection(canLeft, canRight);
             GameManager.Instance.MoveSheriff(dir);
@@ -620,6 +642,9 @@ public class CardActionResolver : MonoBehaviour
         {
             leftButton.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("moveHorizontally");
+                
                 GameManager.Instance.MoveSheriff(-1);
                 horizontalChoicePanel.SetActive(false);
                 FinishNow();
@@ -630,6 +655,9 @@ public class CardActionResolver : MonoBehaviour
         {
             rightButton.onClick.AddListener(() =>
             {
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlayActionForCard("moveHorizontally");
+                
                 GameManager.Instance.MoveSheriff(+1);
                 horizontalChoicePanel.SetActive(false);
                 FinishNow();
